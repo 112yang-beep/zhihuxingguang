@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#1e1b4b">
+    <title>智护星光 - 孤独症儿童行为分析AI助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-color: #6366f1;
+            --parent-color: #10b981;
+            --expert-color: #8b5cf6;
+            --quick-color: #f59e0b;
+            --bg-color: #f9fafb;
+            --text-color: #1f2937;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+        
+        /* 头部 */
+        .header {
+            text-align: center;
+            padding: 30px 0;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            color: #1e1b4b;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        /* 开场白 */
+        .greeting {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .greeting h2 {
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+        
+        /* 模式按钮 */
+        .mode-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        
+        .mode-btn {
+            padding: 20px;
+            border-radius: 16px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: left;
+            transition: all 0.3s;
+            color: white;
+        }
+        
+        .mode-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .mode-btn.parent {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .mode-btn.expert {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+        
+        .mode-btn.quick {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        .mode-btn .title {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .mode-btn .desc {
+            font-size: 13px;
+            opacity: 0.9;
+            font-weight: normal;
+        }
+        
+        /* 当前模式 */
+        .current-mode {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .mode-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .mode-badge.parent { background: var(--parent-color); }
+        .mode-badge.expert { background: var(--expert-color); }
+        .mode-badge.quick { background: var(--quick-color); }
+        
+        .change-mode-btn {
+            background: #f3f4f6;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        /* 聊天区域 */
+        .chat-area {
+            display: none;
+        }
+        
+        .chat-area.active {
+            display: block;
+        }
+        
+        .messages {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 12px;
+        }
+        
+        .message.user {
+            background: #e0e7ff;
+            margin-left: 20px;
+        }
+        
+        .message.assistant {
+            background: #f3f4f6;
+            margin-right: 20px;
+        }
+        
+        .message .role {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        
+        .message .content {
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        
+        /* 输入区域 */
+        .input-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .input-container {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-container textarea {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            resize: none;
+            font-size: 16px;
+            min-height: 48px;
+            max-height: 120px;
+        }
+        
+        .input-container textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .send-btn {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .send-btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+        
+        /* 上传按钮 */
+        .upload-btn {
+            width: 48px;
+            height: 48px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 12px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* 免责声明 */
+        .disclaimer {
+            background: #fef3c7;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #92400e;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        /* 隐藏类 */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🌟 智护星光</h1>
+            <p>孤独症儿童行为分析AI助手</p>
+        </div>
+        
+        <!-- 开场白 -->
+        <div id="greeting" class="greeting">
+            <h2>🎉 欢迎使用【智护星光】！</h2>
+            <p>我是专为孤独症儿童相关人群服务的AI助手~</p>
+            <p style="margin-top: 15px; font-size: 14px;">📹 也可以直接上传儿童行为视频！</p>
+        </div>
+        
+        <!-- 模式选择 -->
+        <div id="modeSection" class="mode-buttons">
+            <p style="text-align: center; color: #6b7280; margin-bottom: 15px;">👇 请先选择分析模式</p>
+            
+            <button class="mode-btn parent" onclick="selectMode('parent')">
+                <div class="title">👨‍👩‍👧 家长模式</div>
+                <div class="desc">通俗易懂，像朋友聊天</div>
+            </button>
+            
+            <button class="mode-btn expert" onclick="selectMode('expert')">
+                <div class="title">👩‍🏫 专家模式</div>
+                <div class="desc">专业报告，临床规范</div>
+            </button>
+            
+            <button class="mode-btn quick" onclick="selectMode('quick')">
+                <div class="title">⚡ 快速模式</div>
+                <div class="desc">简短精炼，快速了解</div>
+            </button>
+        </div>
+        
+        <!-- 当前模式指示 -->
+        <div id="currentModeSection" class="current-mode hidden">
+            <div>
+                <span>当前模式：</span>
+                <span id="modeBadge" class="mode-badge parent">👨‍👩‍👧 家长模式</span>
+            </div>
+            <button class="change-mode-btn" onclick="showModeSelector()">🔄 切换</button>
+        </div>
+        
+        <!-- 聊天区域 -->
+        <div id="chatArea" class="chat-area">
+            <div id="messages" class="messages">
+                <!-- 消息会显示在这里 -->
+            </div>
+            
+            <div class="disclaimer">
+                ⚠️ AI分析仅供参考，不能替代专业医疗诊断
+            </div>
+        </div>
+    </div>
+    
+    <!-- 输入区域 -->
+    <div id="inputArea" class="input-area hidden">
+        <div class="input-container">
+            <input type="file" id="fileInput" accept="image/*,video/*" style="display: none;" onchange="handleFileSelect(event)">
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">📎</button>
+            <textarea id="messageInput" placeholder="输入您想了解的内容..." rows="1"></textarea>
+            <button id="sendBtn" class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        // 状态
+        let currentMode = null;
+        let messages = [];
+        
+        // 模式信息
+        const modeInfo = {
+            parent: { icon: '👨‍👩‍👧', title: '家长模式', color: '#10b981' },
+            expert: { icon: '👩‍🏫', title: '专家模式', color: '#8b5cf6' },
+            quick: { icon: '⚡', title: '快速模式', color: '#f59e0b' }
+        };
+        
+        // 模式提示词
+        const modePrompts = {
+            parent: `你是智护星光，专注于孤独症儿童行为分析的AI助手。当前使用【家长模式】。
+
+请用最通俗易懂的语言回复，像朋友聊天一样。
+
+要求：
+- 用"咱们孩子""您的孩子"等亲切称呼
+- 用生活中的例子解释专业概念
+- 告诉家长"孩子为什么会这样"
+- 给出"在家能做什么"的具体建议
+- 绝对不说"这孩子有问题"，说"孩子在这些方面需要一些支持"
+- 缓解焦虑，给予希望和信心
+- 告诉家长什么时候需要寻求专业帮助`,
+            
+            expert: `你是智护星光，专注于孤独症儿童行为分析的AI助手。当前使用【专家模式】。
+
+请用专业、精准的语言回复，符合临床规范。
+
+要求：
+- 使用DSM-5/ICD-11诊断标准术语
+- 引用专业评估工具（CARS2、M-CHAT-R等）
+- 逐项评估行为表现
+- 提供功能性行为分析（FBA）
+- 给出循证干预建议
+- 生成结构化专业报告`,
+            
+            quick: `你是智护星光，专注于孤独症儿童行为分析的AI助手。当前使用【快速模式】。
+
+请用简短精炼的方式回复。
+
+要求：
+- 1分钟内能看完
+- 抓住最关键的信息
+- 口语化但有专业性
+- 给出明确行动指引`
+        };
+        
+        // 选择模式
+        function selectMode(mode) {
+            currentMode = mode;
+            
+            // 更新UI
+            document.getElementById('greeting').classList.add('hidden');
+            document.getElementById('modeSection').classList.add('hidden');
+            document.getElementById('currentModeSection').classList.remove('hidden');
+            document.getElementById('chatArea').classList.add('active');
+            document.getElementById('inputArea').classList.remove('hidden');
+            
+            // 更新模式徽章
+            const info = modeInfo[mode];
+            const badge = document.getElementById('modeBadge');
+            badge.className = `mode-badge ${mode}`;
+            badge.textContent = `${info.icon} ${info.title}`;
+            
+            // 添加欢迎消息
+            const welcomeMsg = `欢迎使用【智护星光】${info.icon}
+
+当前模式：${info.title}
+
+${mode === 'parent' ? '我会用通俗易懂的语言帮您分析孩子的情况~' : 
+  mode === 'expert' ? '我将提供专业、规范的临床分析报告。' : 
+  '我会给您简洁精炼的快速分析结果。'}
+
+请描述您想了解的情况，或上传相关视频/图片~`;
+            
+            addMessage('assistant', welcomeMsg);
+        }
+        
+        // 显示模式选择器
+        function showModeSelector() {
+            document.getElementById('greeting').classList.remove('hidden');
+            document.getElementById('modeSection').classList.remove('hidden');
+            document.getElementById('currentModeSection').classList.add('hidden');
+        }
+        
+        // 添加消息
+        function addMessage(role, content) {
+            messages.push({ role, content });
+            renderMessages();
+        }
+        
+        // 渲染消息
+        function renderMessages() {
+            const container = document.getElementById('messages');
+            container.innerHTML = messages.map(msg => `
+                <div class="message ${msg.role}">
+                    <div class="role">${msg.role === 'user' ? '您' : '智护星光'}</div>
+                    <div class="content">${escapeHtml(msg.content)}</div>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/\n/g, '<br>');
+        }
+        
+        // 发送消息
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            
+            if (!content) return;
+            
+            // 清空输入框
+            input.value = '';
+            
+            // 添加用户消息
+            addMessage('user', content);
+            
+            // 显示加载
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span class="loading">...</span>';
+            
+            try {
+                // 构建消息历史
+                const chatMessages = [
+                    { role: 'system', content: modePrompts[currentMode] },
+                    ...messages.map(m => ({ role: m.role, content: m.content }))
+                ];
+                
+                // 调用API
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: chatMessages })
+                });
+                
+                const data = await response.json();
+                
+                if (data.content) {
+                    addMessage('assistant', data.content);
+                } else if (data.error) {
+                    addMessage('assistant', '抱歉，发生了错误：' + data.error);
+                }
+            } catch (error) {
+                // 如果API不可用，使用模拟回复（仅用于演示）
+                const mockResponse = getMockResponse(content);
+                addMessage('assistant', mockResponse);
+            }
+            
+            // 恢复发送按钮
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '➤';
+        }
+        
+        // 模拟回复（API不可用时）
+        function getMockResponse(content) {
+            if (currentMode === 'parent') {
+                return `亲爱的家长朋友，您好！🌟
+
+看到您描述的"${content.substring(0, 20)}..."这种情况，其实很多家长都会遇到。
+
+从发展角度来看，孩子在这个阶段可能会有以下特点：
+
+1️⃣ 社交互动方面
+   - 有些孩子可能更喜欢独自玩耍
+   - 对眼神接触的反应不太稳定
+
+2️⃣ 沟通表达方面
+   - 语言发展有个体差异
+   - 有些孩子用动作代替语言表达需求
+
+💡 在家可以这样做：
+- 多和孩子进行互动游戏
+- 用夸张的表情和语气吸引注意力
+- 给予孩子足够的时间和空间
+
+⚠️ 建议：如果您持续担心，可以记录孩子的行为表现，预约专业评估。
+
+有其他问题随时问我哦~`;
+            } else if (currentMode === 'expert') {
+                return `【行为观察分析报告】
+
+一、基本信息
+- 分析模式：专家模式
+- 评估依据：DSM-5诊断标准
+
+二、行为观察要点
+
+1. 社交互动（Social Communication）
+   - 建议使用SCRS-2进行量化评估
+   - 关注眼神接触频率和质量
+
+2. 行为模式（Restricted & Repetitive Behaviors）
+   - 评估刻板行为的频率和强度
+   - 关注兴趣狭窄程度
+
+三、专业建议
+
+建议进行以下标准化评估：
+- CARS2儿童孤独症评定量表
+- M-CHAT-R/F孤独症筛查量表
+- PEP-3心理教育量表
+
+四、注意事项
+
+⚠️ 本分析仅供参考，需结合临床观察和标准化评估工具综合判断。
+
+如需进一步支持，请联系专业机构进行完整评估。`;
+            } else {
+                return `【快速了解】📋
+
+要点：
+• 孩子可能需要更多社交互动支持
+• 建议观察并记录行为模式
+• 及时寻求专业评估
+
+行动建议：
+✅ 预约专业评估
+✅ 记录日常行为
+✅ 咨询特教老师
+
+⚠️ AI仅供参考，以专业评估为准`;
+            }
+        }
+        
+        // 处理文件选择
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                addMessage('user', `[上传了文件: ${file.name}]`);
+                addMessage('assistant', '已收到您的${file.type.startsWith('video') ? '视频' : '图片'}！视频分析功能正在开发中，请先文字描述您想了解的情况~');
+            }
+        }
+        
+        // Enter键发送
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        // 自动调整输入框高度
+        document.getElementById('messageInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+    </script>
+</body>
+</html>
